@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import Searchbar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import ImageApi from './services/ImageApi';
@@ -6,100 +6,75 @@ import Modal from './Modal/Modal';
 import Loader from './Loader/Loader';
 import Button from './Button/Button';
 
-export default class App extends Component {
-  state = {
-    imageName: '',
-    images: [],
-    loading: false,
-    error: null,
-    page: 1,
-    largeImage: '',
-  };
+export default function App() {
+  const [images, setImages] = useState([]);
+  const [imageName, setImageName] = useState('');
+  const [largeImage, setLargeImage] = useState('');
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState([]);
 
-  componentDidUpdate = (prevProps, prevState) => {
-    if (this.state.imageName !== prevState.imageName) {
-      this.setState({ images: [], loading: true, page: 1 });
-      setTimeout(() => {
-        this.handleApiImages(prevProps, prevState);
-      }, 1);
-    } else if (this.state.page !== prevState.page) {
-      this.handleApiImages(prevProps, prevState);
+  useEffect(() => {
+    if (imageName !== '') {
+      setImages([]);
+      setLoading(true);
+
+      handleApiImages(imageName, page);
     }
-  };
+  }, [imageName]);
 
-  handleNotFoundImages = () => {
-    return <h1>Not forund images at {this.state.imageName}</h1>;
-  };
+  useEffect(() => {
+    if (page > 1) {
+      handleApiImages(imageName, page);
+    }
+  }, [page]);
 
-  handleApiImages = () => {
-    ImageApi(this.state.imageName, this.state.page)
+  function handleApiImages() {
+    ImageApi(imageName, page)
       .then(r => {
-        if (this.state.images.length === 0 || this.state.page === 1) {
-          this.setState({
-            images: r.hits,
-          });
+        if (images.length === 0 || page === 1) {
+          setImages(r.hits);
         } else {
-          this.setState(prevState => ({
-            images: [...prevState.images, ...r.hits],
-          }));
+          setImages(s => [...s, ...r.hits]);
         }
       })
       .catch(error => {
-        this.setState({ error });
+        setError(error);
       })
       .finally(() => {
-        this.setState({ loading: false });
+        setLoading(false);
       });
-  };
-
-  handleLoadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
-  };
-
-  handleModalOpen = image => {
-    this.setState({
-      largeImage: image,
-    });
-  };
-
-  resetLargeImage = () => {
-    this.setState({ largeImage: '' });
-  };
-
-  ///////////////////////////////////////////////////
-
-  handleSubmitForm = value => {
-    this.setState({
-      imageName: value,
-    });
-  };
-
-  setLargeImage = newLargeImage => {
-    this.setState({ largeImage: newLargeImage });
-  };
-
-  render() {
-    const { imageName, loading, error, images, largeImage } = this.state;
-
-    return (
-      <div>
-        <Searchbar onSubmit={this.handleSubmitForm} />
-        <ImageGallery
-          searchName={imageName}
-          onImageClick={this.handleModalOpen}
-          loading={loading}
-          error={error}
-          images={images}
-          largeImage={this.setLargeImage}
-        />
-        {images.length > 0 && <Button onClick={this.handleLoadMore} />}
-        {loading && <Loader />}
-        {largeImage.length > 0 && (
-          <Modal largeImage={largeImage} resetImage={this.resetLargeImage} />
-        )}
-      </div>
-    );
   }
+
+  function handleLoadMore() {
+    setPage(s => s + 1);
+  }
+
+  function resetLargeImage() {
+    setLargeImage('');
+  }
+
+  function handleSubmitForm(value) {
+    setImageName(value);
+    setPage(1);
+  }
+
+  return (
+    <div>
+      <Searchbar onSubmit={handleSubmitForm} />
+      <ImageGallery
+        searchName={imageName}
+        onImageClick={setLargeImage}
+        loading={loading}
+        error={error}
+        images={images}
+        largeImage={setLargeImage}
+      />
+      {images.length > 0 && <Button onClick={handleLoadMore} />}
+      {loading && <Loader />}
+      {largeImage.length > 0 && (
+        <Modal largeImage={largeImage} resetImage={resetLargeImage} />
+      )}
+    </div>
+  );
 }

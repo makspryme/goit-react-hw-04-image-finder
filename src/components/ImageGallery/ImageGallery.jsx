@@ -1,10 +1,9 @@
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
 
-export default function ImageGallery({ error, images, largeImage }) {
+export default function ImageGallery({images, largeImage }) {
   return (
     <div>
       <ul className="ImageGallery">
-        {error && <h2>{error}</h2>}
         {images.length > 0 &&
           images.map(({ id, webformatURL, largeImageURL }) => {
             return (
