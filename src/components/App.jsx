@@ -15,36 +15,33 @@ export default function App() {
   const [error, setError] = useState([]);
 
   useEffect(() => {
-    if (imageName !== '') {
+    function handleApiImages() {
+      ImageApi(imageName, page)
+        .then(r => {
+          if (page === 1) {
+            setImages(r.hits);
+          } else {
+            setImages(s => [...s, ...r.hits]);
+          }
+        })
+        .catch(error => {
+          setError(error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+
+    if (imageName !== '' && page === 1) {
       setImages([]);
       setLoading(true);
 
-      handleApiImages(imageName, page);
+      handleApiImages();
     }
-  }, [imageName]);
-
-  useEffect(() => {
     if (page > 1) {
-      handleApiImages(imageName, page);
+      handleApiImages();
     }
-  }, [page]);
-
-  function handleApiImages() {
-    ImageApi(imageName, page)
-      .then(r => {
-        if (images.length === 0 || page === 1) {
-          setImages(r.hits);
-        } else {
-          setImages(s => [...s, ...r.hits]);
-        }
-      })
-      .catch(error => {
-        setError(error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }
+  }, [imageName, page]);
 
   function handleLoadMore() {
     setPage(s => s + 1);

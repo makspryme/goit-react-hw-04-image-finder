@@ -1,5 +1,4 @@
 import * as basicLightbox from 'basiclightbox';
-import { useEffect } from 'react';
 
 export default function Modal({ resetImage, largeImage }) {
   const instance = basicLightbox.create(`
@@ -10,17 +9,15 @@ export default function Modal({ resetImage, largeImage }) {
       </div>
   `);
 
-  function closeModal(e) {
+  const closeModal = e => {
     if (e.code === 'Escape') {
       instance.close();
-      window.removeEventListener('keydown', closeModal, true);
     }
+    window.removeEventListener('keydown', closeModal, true);
     resetImage();
-  }
+  };
 
-  useEffect(() => {
-    window.addEventListener('keydown', closeModal, true);
-  }, []);
+  window.addEventListener('keydown', closeModal, true);
 
   return <>{instance.show()}</>;
 }
